@@ -34,6 +34,15 @@ args_parser.add_argument(
 )
 
 args_parser.add_argument(
+   '--origin-branch',
+   '-ob',
+   type = str,
+   dest ='origin_branch',
+   default = '',
+   help = 'Branch to clone.'
+)
+
+args_parser.add_argument(
    '--submodules-path-prefix',
    '-p',
    type = str,
@@ -148,7 +157,7 @@ def get_direct_submodules_list (repository_path):
 
    return result
 
-def clone_repository (repo_source, repo_name, dest_parent_dir):
+def clone_repository (repo_source, repo_name, dest_parent_dir, branch):
    print(
       "[D] Cloning "
       + repo_name
@@ -163,6 +172,12 @@ def clone_repository (repo_source, repo_name, dest_parent_dir):
       ['git', 'clone', repo_source, repo_name],
       cwd = dest_parent_dir
    ).wait()
+
+   if (branch != ''):
+      subprocess.Popen(
+         ['git', 'switch', branch],
+         cwd = (dest_parent_dir + "/" + repo_name)
+      ).wait()
 
    return (dest_parent_dir + "/" + repo_name)
 
@@ -276,7 +291,8 @@ def save_submodule_as (submodule_url, submodule_commit, args):
    repository_path = clone_repository(
          submodule_url,
          module_name,
-         (args.temporary_clone_folder + args.submodules_path_prefix)
+         (args.temporary_clone_folder + args.submodules_path_prefix),
+         ''
       )
    switch_to_commit(repository_path, submodule_commit)
    save_submodules_as(repository_path, args)
@@ -290,7 +306,7 @@ def save_submodule_as (submodule_url, submodule_commit, args):
 
    return (new_url, new_commit)
 
-def rewrite_submodule_urls (repository_path, submodules, updated_submodules):
+def rewrite_submodule_urls (repository_path, submodules, updated_submodules, new_submodule_branch):
    print("[D] Rewriting submodule links in " + repository_path)
 
    for submodule_path in submodules:
@@ -305,9 +321,15 @@ def rewrite_submodule_urls (repository_path, submodules, updated_submodules):
          + str(new_submodule_url)
       )
 
-      print("git submodule set-url " + submodule_name + " " + new_submodule_url)
+      print("git submodule set-url " + submodule_path+ " " + new_submodule_url)
       subprocess.Popen(
-         ['git', 'submodule', 'set-url', submodule_name, new_submodule_url],
+         ['git', 'submodule', 'set-url', submodule_path, new_submodule_url],
+         cwd = repository_path
+      ).wait()
+
+      print("git submodule set-branch -b " + new_submodule_branch + " -- " + submodule_path)
+      subprocess.Popen(
+         ['git', 'submodule', 'set-branch', '-b', new_submodule_branch, '--', submodule_path],
          cwd = repository_path
       ).wait()
 
@@ -331,7 +353,7 @@ def save_submodules_as (repository_path, args):
             args
          )
 
-   rewrite_submodule_urls(repository_path, submodules, updated_submodules)
+   rewrite_submodule_urls(repository_path, submodules, updated_submodules, args.save_as_branch)
 
    return
 
@@ -341,7 +363,8 @@ main_repository_path = main_repo_work_dir + main_repo_name
 clone_repository(
    args.source_repository,
    main_repo_name,
-   main_repo_work_dir
+   main_repo_work_dir,
+   args.origin_branch
 )
 
 save_submodules_as(main_repository_path, args)
