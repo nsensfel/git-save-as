@@ -13,7 +13,7 @@ Start by making sure this quickly hacked together script doesn't break when it
 handles your case:
 
 ```
-$ ./git_save_as.py https://github.com/ArduPilot/ardupilot.git -b my_git_save_as_branch -t /tmp/my_git_save_as_temp_dir https://github.com/ArduPilot/ardupilot.git "../local_clone.sh ~/git_repos/main_projects/ " "../local_clone.sh ~/git_repos/submodules/ "
+$ ./git_save_as.py -b my_git_save_as_branch -t /tmp/my_git_save_as_temp_dir https://github.com/ArduPilot/ardupilot.git "./local_clone.sh ~/git_repos/main_projects/ " "./local_clone.sh ~/git_repos/submodules/ "
 ```
 This should create an interconnected set of repositories in your `~/git_repos/`
 folder, with your copy of the ardupilot's repo being in

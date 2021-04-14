@@ -109,7 +109,13 @@ def read_gitmodules (repository_path):
             if search:
                if (module_path != None):
                   result[module_path] = (module_name, module_url)
+                  module_name = None
+                  module_path = None
+                  module_url = None
+                  module_branch = None
+
                module_name = search[0]
+               module_path = search[0]
             else:
                search = re.findall(r'\s*path\s*=\s*([^\s]+)', line)
                if search:
@@ -152,6 +158,11 @@ def get_direct_submodules_list (repository_path):
 
    for submodule_path in data_from_gitmodules:
       (submodule_name, submodule_url) = data_from_gitmodules[submodule_path]
+
+      if (submodule_path not in data_from_git_submodule_status):
+         print("[W] Submodule '" + submodule_path + "' has no status.")
+         continue
+
       submodule_commit = data_from_git_submodule_status[submodule_path]
       result[submodule_path] = (submodule_name, submodule_url, submodule_commit)
 
